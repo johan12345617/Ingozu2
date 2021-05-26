@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1099349401749",
+    "project_id": "ingozu2",
+    "storage_bucket": "ingozu2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1099349401749:android:19242367d8c921e0dd7b9c",
+        "android_client_info": {
+          "package_name": "com.example.ingozu2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1099349401749-00dg5u3t1hcgbna77hl8npep35fa2uul.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ingozu2",
+            "certificate_hash": "e20c63d95fa5f883d860f1bc86fdebbb292756ae"
+          }
+        },
+        {
+          "client_id": "1099349401749-tpu1mk0qjrd60u9ch1dsg9jltvsio4ra.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKIPYrxyeDGO7qgCynEBpmGSTvgOEKl7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1099349401749-tpu1mk0qjrd60u9ch1dsg9jltvsio4ra.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

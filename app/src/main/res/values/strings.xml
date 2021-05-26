@@ -1,0 +1,26 @@
+<resources>
+
+    <string name="app_name">Form Designs</string>
+    <string name="message">Message</string>
+    <string name="send">Send</string>
+    <string name="email">Email</string>
+    <string name="name">Nombre</string>
+
+    <string name="nav_header_desc">test</string>
+    <string name="nav_header_title">test</string>
+    <string name="nav_header_subtitle">test</string>
+    <string name="menu_herramientas">Herramientas</string>
+    <string name="menu_cajas">Cajas</string>
+    <string name="ajustes">Ajustes</string>
+    <string name="bio_desarrollador">Acerca de</string>
+    <string name="tittle_agregar_herramienta">Agregar Herramienta</string>
+    <string name="tittle_agregar_caja">Agregar Caja</string>
+    <string name="nivel">Nivel</string>
+    <string name="agregar">Agregar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="Escoger">Escoger Foto</string>
+    <string name="Tomar">Tomar Foto</string>
+    <string name="cantidad">Cantidad</string>
+    <string name="descripcion">Descripcion</string>
+
+</resources>

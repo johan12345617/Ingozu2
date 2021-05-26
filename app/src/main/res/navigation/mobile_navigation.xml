@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_herramientas">
+
+    <fragment
+        android:id="@+id/nav_herramientas"
+        android:name="com.example.ingozu2.ui.Herramientas.HerramientasFragment"
+        android:label="@string/menu_herramientas"
+        tools:layout="@layout/fragment_herramientas" />
+
+    <fragment
+        android:id="@+id/nav_cajas"
+        android:name="com.example.ingozu2.ui.Cajas.CajasFragment"
+        android:label="@string/menu_cajas"
+        tools:layout="@layout/fragment_cajas" />
+</navigation>
