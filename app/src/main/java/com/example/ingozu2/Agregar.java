@@ -2,17 +2,24 @@ package com.example.ingozu2;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Spinner;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -21,41 +28,45 @@ import com.example.ingozu2.ui.Cajas.Cajas;
 import com.example.ingozu2.ui.Herramientas.Herramientas;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
-public class Agregar extends AppCompatActivity {
+public class Agregar extends AppCompatActivity{
 
     private FirebaseFirestore  db = FirebaseFirestore.getInstance();
     private StorageReference storageReference;
     private static final int PHOTO_HERRAMIENTA = 1;
     private static final int PHOTO_CAJA = 2;
     private FirebaseAuth mAuth;
-
+    static final int REQUEST_IMAGE_CAPTURE = 3;
     private Uri herramienta;
     private String urlfoto;
     private Uri caja;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
+        final ProgressDialog dialog = new ProgressDialog(Agregar.this);;
+        final Cajas[] cajaRapida = new Cajas[1];
         super.onCreate(savedInstanceState);
         Bundle bundle = getIntent().getExtras();
         int codigo = (int) bundle.getInt("codigo");
 
         final FirebaseStorage storage = FirebaseStorage.getInstance();
-
         switch(codigo){
             case 1:
                 //agregar herramienta
@@ -118,7 +129,17 @@ public class Agregar extends AppCompatActivity {
                                     Log.d("link",""+urlfoto);
                                     //agregando la herramienta
                                     db.collection("herramientas").document().set(new Herramientas(
-                                            nombre.getText().toString(),Integer.parseInt(cantidad.getText().toString()),descripcion.getText().toString(),"testing",urlfoto));
+                                            nombre.getText().toString(),Integer.parseInt(cantidad.getText().toString()),descripcion.getText().toString(),"testing",urlfoto)).addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Toast.makeText(getBaseContext(),"¡Herramienta Agregada!",Toast.LENGTH_LONG);
+                                        }
+                                    }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(getBaseContext(),"Error al subir",Toast.LENGTH_LONG);
+                                        }
+                                    });
                                 } else {
                                     // Handle failures
                                     // ...
@@ -196,11 +217,32 @@ public class Agregar extends AppCompatActivity {
                 //agregar
                 agregar1.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
+                        //agregando caja rapido
+                        cajaRapida[0] =new Cajas(Integer.parseInt(nivel.getText().toString()),
+                                nombre1.getText().toString(),
+                                urlfoto,
+                                descripcion1.getText().toString());
+
+                        //agregando imagen
                         storageReference = storage.getReference("cajas");
+                        if(caja==null){
+                            Resources resources = getApplicationContext().getResources();
+                            caja=Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
+                                    resources.getResourcePackageName(R.drawable.not_available) + '/'
+                                    + resources.getResourceTypeName(R.drawable.not_available) + '/'
+                                    + resources.getResourceEntryName(R.drawable.not_available) );
+                        }
+
                         final StorageReference ref = storageReference.child(caja.getLastPathSegment());
                         UploadTask uploadTask = ref.putFile(caja);
-
-                        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+                        Task<Uri> urlTask = uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                dialog.show();
+                                dialog.setContentView(R.layout.progress_view);
+                                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                            }
+                        }).continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                             @Override
                             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                                 if (!task.isSuccessful()) {
@@ -216,17 +258,40 @@ public class Agregar extends AppCompatActivity {
                                 if (task.isSuccessful()) {
                                     Uri downloadUri = task.getResult();
                                     urlfoto = downloadUri.toString();
-                                    //agregando la herramienta
-
-                                    db.collection("cajas").document().set(new Cajas(Integer.parseInt(nivel.getText().toString()),nombre1.getText().toString(),urlfoto,descripcion1.getText().toString()));
-                                } else {
-                                    // Handle failures
-                                    // ...
-                                    Log.d("internet","no hay conexion a internet");
+                                    //agregando caja
+                                    db.collection("cajas").document().set(
+                                            new Cajas(Integer.parseInt(nivel.getText().toString()),
+                                                    nombre1.getText().toString(),
+                                                    urlfoto,
+                                                    descripcion1.getText().toString()))
+                                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                @Override
+                                                public void onSuccess(Void aVoid) {
+                                                    Intent i = new Intent(getApplicationContext(),ListaPrincipal.class);
+                                                    i.putExtra("exito",1);
+                                                    dialog.dismiss();
+                                                    startActivity(i);
+                                                    finish();
+                                                }
+                                            }).addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Intent i = new Intent(getApplicationContext(),ListaPrincipal.class);
+                                            i.putExtra("exito",0);
+                                            dialog.dismiss();
+                                            startActivity(i);
+                                            finish();
+                                        }
+                                    });
+                                }else{
+                                    Intent i = new Intent(getApplicationContext(),ListaPrincipal.class);
+                                    i.putExtra("exito",0);
+                                    dialog.dismiss();
+                                    startActivity(i);
+                                    finish();
                                 }
                             }
                         });
-                        finish();
                     }
                 });
 
@@ -234,7 +299,8 @@ public class Agregar extends AppCompatActivity {
                 fotoc.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-
+                        Log.d("foto","probando tomar foto");
+                        tomarFoto(view);
                     }
                 });
 
@@ -262,21 +328,30 @@ public class Agregar extends AppCompatActivity {
 
 
         super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == PHOTO_HERRAMIENTA && resultCode == Activity.RESULT_OK) {
-            ImageView fotoHerramienta = (ImageView) findViewById(R.id.fotoHerramienta);
+            ImageView fotoHerramienta = findViewById(R.id.fotoHerramienta);
             Uri u = data.getData();
             Glide.with(getApplicationContext()).load(u).into(fotoHerramienta);
             fotoHerramienta.setVisibility(View.VISIBLE);
             herramienta = u;
 
         } else if (requestCode == PHOTO_CAJA && resultCode == Activity.RESULT_OK) {
-            ImageView fotocaja = (ImageView) findViewById(R.id.fotoCaja);
+            ImageView fotocaja = findViewById(R.id.fotoCaja);
             Uri u = data.getData();
             Log.d("TAG",""+u.toString());
             Glide.with(getApplicationContext()).load(u).into(fotocaja);
             fotocaja.setVisibility(View.VISIBLE);
             caja = u;
+        }
+        else if(requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK){
+            ImageView fotocaja = findViewById(R.id.fotoCaja);
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            fotocaja.setImageBitmap(photo);
+            caja=data.getData();
 
+            // CALL THIS METHOD TO GET THE URI FROM THE BITMAP
+            caja = getImageUri(getApplicationContext(), photo);
         }
     }
 
@@ -299,4 +374,28 @@ public class Agregar extends AppCompatActivity {
         }
     }
 
+    private void tomarFoto(View v) {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        Bitmap OutImage = Bitmap.createScaledBitmap(inImage, 1000, 1000,true);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), OutImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    public String getRealPathFromURI(Uri uri) {
+        String path = "";
+        if (getContentResolver() != null) {
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+                int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+                path = cursor.getString(idx);
+                cursor.close();
+            }
+        }
+        return path;
+    }
 }

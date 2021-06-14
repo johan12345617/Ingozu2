@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Menu;
 
+import com.example.ingozu2.ui.Cajas.CajasFragment;
 import com.google.android.material.navigation.NavigationView;
 
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;

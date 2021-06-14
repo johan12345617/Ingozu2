@@ -73,7 +73,7 @@
             <ImageView
                 android:layout_width="300dp"
                 android:layout_height="200dp"
-                android:id="@+id/fotoHerramienta"
+                android:id="@+id/fotoCaja"
                 android:layout_gravity="center"
                 android:visibility="visible"/>
 
